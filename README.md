@@ -1,8 +1,11 @@
 # Job Tracker (n8n)
 
-An automated workflow that checks RemoteOK for new job listings matching
-specific keywords, avoids duplicate notifications, and sends new matches
-to Telegram.
+Job Tracker is an automated n8n workflow that checks the RemoteOK job board
+every 6 hours for new listings matching specific keywords (e.g. Python,
+machine learning, AI, internships). It filters relevant postings, checks a
+Google Sheet to avoid notifying about jobs already seen, logs new matches,
+and sends real-time alerts straight to Telegram — removing the need to
+manually refresh job boards throughout the day.
 
 ## How it works
 1. Schedule Trigger runs every 6 hours
