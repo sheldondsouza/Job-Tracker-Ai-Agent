@@ -1,0 +1,269 @@
+{
+  "name": "Job Tracker",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            },
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -304,
+        -224
+      ],
+      "id": "4dc2ab3c-d22c-49b8-9d2d-87ddc899878b",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://remoteok.com/api",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -80,
+        -224
+      ],
+      "id": "fceb7e4a-79a9-4f0b-98d7-89515d71a4f1",
+      "name": "HTTP Request",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const keywords = [\"python\", \"machine learning\", \"ai\", \"intern\", \"data\"];\n\nreturn $input.all().filter(item => {\n  const job = item.json;\n  if (!job.id || !job.position) return false;\n\n  const text = (\n    (job.position || \"\") + \" \" +\n    (job.tags || []).join(\" \")\n  ).toLowerCase();\n\n  return keywords.some(k => text.includes(k));\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        176,
+        -224
+      ],
+      "id": "32afd2da-07da-45ec-aea7-b10982e4b772",
+      "name": "Code in JavaScript",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Job Tracker Log1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-0nlHqdTRzBhUzeaeNHqUDx-zDVgFuE5ezZUF8Ed6Aw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-0nlHqdTRzBhUzeaeNHqUDx-zDVgFuE5ezZUF8Ed6Aw/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        368,
+        -224
+      ],
+      "id": "bffb564d-0bfe-4a31-8b68-f2a93c080f21",
+      "name": "Get row(s) in sheet",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "nhEocAzvuuqMG8LT",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Input 1: filtered jobs (from Code/Filter node)\n// Input 2: existing seen IDs (from Google Sheets node)\n\nconst seenIds = new Set($('Get row(s) in sheet').all().map(item => String(item.json.job_id)));\n\nreturn items.filter(item => !seenIds.has(String(item.json.id)));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        592,
+        -224
+      ],
+      "id": "09a12352-d5a1-494a-be5c-45c76d626f68",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1-0nlHqdTRzBhUzeaeNHqUDx-zDVgFuE5ezZUF8Ed6Aw",
+          "mode": "list",
+          "cachedResultName": "Job Tracker Log1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-0nlHqdTRzBhUzeaeNHqUDx-zDVgFuE5ezZUF8Ed6Aw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Z688EksXFtUNa_HxPX0_1AqaZSpRoTlBS-4LmHfCgdM/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "job_id": "={{ $json.id }}"
+          },
+          "matchingColumns": [
+            "job_id"
+          ],
+          "schema": [
+            {
+              "id": "job_id",
+              "displayName": "job_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        816,
+        -224
+      ],
+      "id": "b08904b7-a237-4844-9574-8dea7cbbc791",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "nhEocAzvuuqMG8LT",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_CHAT_ID",
+        "text": "=New job match: {{ $('Code in JavaScript1').item.json.position }}\nCompany:{{ $('Code in JavaScript1').item.json.company }}    \nLocation: {{ $('Code in JavaScript1').item.json.location }}    \nApply: {{ $('Code in JavaScript1').item.json.apply_url }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1040,
+        -224
+      ],
+      "id": "af9f7926-a5f7-45a3-b280-8fbf7b36b392",
+      "name": "Send a text message",
+      "webhookId": "8a1b899f-a5b2-4d8c-867b-b8ce8aea40e3",
+      "credentials": {
+        "telegramApi": {
+          "id": "LwD8fWVJWGAPc74w",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "b03c616f-fd4a-4a7c-9b0d-936e3e852f24",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cf374cb23d6c505931389eaa0dbe92f95915760f070860e941b94ebc3a7ceece"
+  },
+  "nodeGroups": [],
+  "id": "zBdnqj5Am3eLsA6C",
+  "tags": []
+}
