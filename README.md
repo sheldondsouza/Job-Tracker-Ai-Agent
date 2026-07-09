@@ -13,13 +13,12 @@ to Telegram.
 6. Sends a Telegram notification for each new match
 
 ## Setup
-1. Import `job-tracker-workflow.json` into your n8n instance
-2. Add credentials for:
-   - Google Sheets (OAuth)
-   - Telegram (bot token from @BotFather)
-3. Create a Google Sheet with a `job_id` column and link it in the
-   Google Sheets nodes
-4. Activate the workflow
+After importing `job-tracker-workflow.json`:
+1. Reconnect the Google Sheets and Telegram credentials (these are not
+   included in the export for security)
+2. Update the `chatId` field in the "Send a text message" node with your
+   own Telegram chat ID
+3. Update the Google Sheets `documentId` to point to your own sheet
 
 ## Tech
 n8n, RemoteOK API, Google Sheets, Telegram Bot API
